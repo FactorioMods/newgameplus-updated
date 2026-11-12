@@ -1,7 +1,7 @@
 local mod_gui = require("__core__/lualib/mod-gui")
-local util = require("__NewGamePlus__/utilities")
-local map_gen_gui = require("__NewGamePlus__/map_gen_settings_gui")
-local map_settings_gui = require("__NewGamePlus__/map_settings_gui")
+local util = require("__newgameplus-updated__/utilities")
+local map_gen_gui = require("__newgameplus-updated__/map_gen_settings_gui")
+local map_settings_gui = require("__newgameplus-updated__/map_settings_gui")
 
 local gui = {}
 
@@ -240,7 +240,7 @@ gui.make_advanced_settings_gui = function(parent)
   local subframe = parent.add{
     type = "frame",
     direction = "vertical",
-    style = "b_inner_frame",
+    style = "inside_deep_frame",
     name = "new-game-plus-config-more-frame",
   }
   local table = subframe.add{
@@ -278,27 +278,7 @@ gui.make_difficulty_settings_gui = function(parent)
   }
   table.style.column_alignments[2] = "center"
 
-  local difficulty_options = {{"recipe-difficulty.normal"}, {"recipe-difficulty.expensive"}}
-  table.add{
-    type = "label",
-    caption = {"gui.new-game-plus-recipe-difficulty"}
-  }
-  local recipe_difficulty = table.add{
-    type = "drop-down",
-    name = "new-game-plus-recipe-difficulty-drop-down",
-  }
-  recipe_difficulty.items = difficulty_options
-  recipe_difficulty.selected_index = game.difficulty_settings.recipe_difficulty + 1
-  table.add{
-    type = "label",
-    caption = {"gui.new-game-plus-technology-difficulty"}
-  }
-  local technology_difficulty = table.add{
-    type = "drop-down",
-    name = "new-game-plus-technology-difficulty-drop-down",
-  }
-  technology_difficulty.items = difficulty_options
-  technology_difficulty.selected_index = game.difficulty_settings.technology_difficulty + 1
+  -- Factorio 2.x exposes one recipe/technology mode; retain research cost.
   table.add{
     type = "label",
     caption = {"gui.new-game-plus-technology-price-multiplier"}

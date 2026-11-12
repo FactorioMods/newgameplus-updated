@@ -1,20 +1,8 @@
 ---------------------------------------------------------------------------------------------------
-Version: 5.0.2
-Date: ????
+Version: 1.0.0
+Date: 2026-11-12
   Changes:
----------------------------------------------------------------------------------------------------
-Version: 5.0.1
-Date: 2022-01-27
-  Features:
-    - Added peaceful mode description.
-    - Changed license to MIT.
-      I cannot (reasonably) play games without controller support.
-      Maintaining mods for a game I can't play is an uninteresting hobby for me.
-      So I want to make it easier for others to fork my mods.
-      May you take this code and have fun with it.
-  Bugfixes:
-    - Fixed locale of labels for vanilla ores.
-    - Fixed that space exploration planet size was reset to default when starting a new game plus. 
+    - This fork updates world generation, configuration and research reset behavior for Factorio 2.1.24. Starting New Game+ replaces the current world; keep a save if you want to return to it.
 ---------------------------------------------------------------------------------------------------
 Version: 5.0.0
 Date: 2021-02-11

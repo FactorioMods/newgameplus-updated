@@ -1,4 +1,4 @@
-data.raw.character.character.collision_mask = { "player-layer", "train-layer", "not-colliding-with-itself", "consider-tile-transitions"}
+data.raw.character.character.collision_mask = {layers={player=true,train=true},not_colliding_with_itself=true,consider_tile_transitions=true}
 data.raw["gui-style"]["default"]["pusher"] =
 {
   type = "horizontal_flow_style",

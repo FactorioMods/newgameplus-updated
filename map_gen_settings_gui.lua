@@ -1,4 +1,4 @@
-local util = require("__NewGamePlus__/utilities")
+local util = require("__newgameplus-updated__/utilities")
 local MOD_PREFIX = "new-game-plus-"
 local GUI_PREFIX = "map-gen-"
 local ENTIRE_PREFIX = MOD_PREFIX .. GUI_PREFIX
@@ -145,7 +145,7 @@ map_gen_gui.create_resource_table = function(parent)
   }
 
   -- resources
-  for _, control in pairs(game.autoplace_control_prototypes) do
+  for _, control in pairs(prototypes.autoplace_control) do
     if control.category == "resource" then
       map_gen_gui.make_autoplace_options(control.name, table, true, control)
     end
@@ -179,8 +179,8 @@ map_gen_gui.create_controls_with_scale_table = function(parent)
   map_gen_gui.make_autoplace_options("water", table, false)
 
   -- trees and custom mod stuff
-  for _, control in pairs(game.autoplace_control_prototypes) do
-    if control.category == "terrain" and control.name ~= "planet-size" then -- planet size is a space exploration thing, we don't want the player to change it
+  for _, control in pairs(prototypes.autoplace_control) do
+    if control.category == "terrain" and control.name ~= "planet-size" and control.name ~= "water" and control.name ~= "cliffs" then -- planet size is a space exploration thing, we don't want the player to change it
       map_gen_gui.make_autoplace_options(control.name, table, false, control)
     end
   end
@@ -264,7 +264,7 @@ map_gen_gui.create_enemies_table = function(parent)
   table.children[1].style.horizontally_stretchable = true
 
   -- biter bases
-  for _, control in pairs(game.autoplace_control_prototypes) do
+  for _, control in pairs(prototypes.autoplace_control) do
     if control.category == "enemy" then
       map_gen_gui.make_autoplace_options(control.name, table, false, control)
     end
@@ -369,13 +369,13 @@ map_gen_gui.reset_to_defaults = function(parent)
   enemies_table[ENTIRE_PREFIX .. "starting-area-size"].text = "1"
 
   -- resources and terrain and enemies
-  local autoplace_control_prototypes = game.autoplace_control_prototypes
+  local autoplace_control_prototypes = prototypes.autoplace_control
   for _, control in pairs(autoplace_control_prototypes) do
     if control.category == "resource" then
       resource_table[ENTIRE_PREFIX .. control.name .. "-freq"].text = "1"
       resource_table[ENTIRE_PREFIX .. control.name .. "-size"].text = "1"
       resource_table[ENTIRE_PREFIX .. control.name .. "-richn"].text = "1"
-    elseif control.category == "terrain" and control.name ~= "planet-size" then -- planet size is a space exploration thing, we don't want the player to change it
+    elseif control.category == "terrain" and control.name ~= "planet-size" and control.name ~= "water" and control.name ~= "cliffs" then -- planet size is a space exploration thing, we don't want the player to change it
       controls_with_scale_table[ENTIRE_PREFIX .. control.name .. "-freq"].text = "1"
       controls_with_scale_table[ENTIRE_PREFIX .. control.name .. "-size"].text = "1"
     elseif control.category == "enemy" then
@@ -415,7 +415,7 @@ map_gen_gui.set_to_current = function(parent, map_gen_settings)
   if property_expression_names then -- can be missing when reading from preset
     local possible_properties = util.get_possible_noise_expression_properties()
     local relevant_noise_expressions = util.get_relevant_noise_expressions()
-    local valid_named_noise_expressions = game.named_noise_expressions
+    local valid_named_noise_expressions = prototypes.named_noise_expression
     for property in pairs(possible_properties) do
       local selected_expression = property_expression_names[property]
       if selected_expression then
@@ -442,7 +442,7 @@ map_gen_gui.set_to_current = function(parent, map_gen_settings)
   enemies_table[ENTIRE_PREFIX .. "starting-area-size"].text = util.number_to_string(util.map_gen_size_to_number(map_gen_settings.starting_area) or 1)
 
   -- resources and terrain and enemies
-  local valid_autoplace_controls = game.autoplace_control_prototypes
+  local valid_autoplace_controls = prototypes.autoplace_control
   if autoplace_controls then
     for name, autoplace_control in pairs(autoplace_controls) do
       if valid_autoplace_controls[name] then
@@ -529,7 +529,7 @@ map_gen_gui.read = function(parent, current_map_gen_settings)
   -- starting area
   map_gen_settings.starting_area = util.textfield_to_number_with_error(enemies_table[ENTIRE_PREFIX .. "starting-area-size"])
 
-  local autoplace_control_prototypes = game.autoplace_control_prototypes
+  local autoplace_control_prototypes = prototypes.autoplace_control
   -- resources and terrain and enemies
   for _, control in pairs(autoplace_control_prototypes) do
     if control.category == "resource" then
@@ -538,7 +538,7 @@ map_gen_gui.read = function(parent, current_map_gen_settings)
         size = util.textfield_to_number_with_error(resource_table[ENTIRE_PREFIX .. control.name .. "-size"]),
         richness = util.textfield_to_number_with_error(resource_table[ENTIRE_PREFIX .. control.name .. "-richn"])
       }
-    elseif control.category == "terrain" and control.name ~= "planet-size" then -- planet size is a space exploration thing, we don't want the player to change it
+    elseif control.category == "terrain" and control.name ~= "planet-size" and control.name ~= "water" and control.name ~= "cliffs" then -- planet size is a space exploration thing, we don't want the player to change it
       autoplace_controls_mine[control.name] = {
         frequency = 1 / util.textfield_to_number_with_error(controls_with_scale_table[ENTIRE_PREFIX .. control.name .. "-freq"]), -- inverse
         size = util.textfield_to_number_with_error(controls_with_scale_table[ENTIRE_PREFIX .. control.name .. "-size"])

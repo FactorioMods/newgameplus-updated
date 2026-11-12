@@ -1,8 +1,9 @@
+local legacy_import = require("legacy_import")
 local mod_gui = require("__core__/lualib/mod-gui")
-local util = require("__NewGamePlus__/utilities")
-local gui = require("__NewGamePlus__/gui")
-local map_gen_gui = require("__NewGamePlus__/map_gen_settings_gui")
-local map_settings_gui = require("__NewGamePlus__/map_settings_gui")
+local util = require("__newgameplus-updated__/utilities")
+local gui = require("__newgameplus-updated__/gui")
+local map_gen_gui = require("__newgameplus-updated__/map_gen_settings_gui")
+local map_settings_gui = require("__newgameplus-updated__/map_settings_gui")
 local DEBUG_MODE = true
 
 local no_delete_surfaces =
@@ -66,12 +67,12 @@ local function full_gui_regen(player)
 end
 
 script.on_event(defines.events.on_rocket_launched, function(event)
-  if global.rocket_launched then return end --don't regen gui if this is not the first rocket launch
+  if storage.rocket_launched then return end --don't regen gui if this is not the first rocket launch
   if event.rocket.get_item_count("satellite") > 0 then
     for _, player in pairs(game.players) do
       full_gui_regen(player)
     end
-    global.rocket_launched = true --the rocket has now been launched, so the gui has to be regened on player created and config changed
+    storage.rocket_launched = true --the rocket has now been launched, so the gui has to be regened on player created and config changed
   end
 end)
 
@@ -91,8 +92,6 @@ local function reset_to_default(player)
   -- DIFFICULTY SETTINGS --
   local more_config_table = frame_flow["new-game-plus-config-more-frame"]["new-game-plus-config-more-frame"]["new-game-plus-config-more-table"]
   local difficulty_table = more_config_table["new-game-plus-config-more-difficulty-flow"]["new-game-plus-config-more-difficulty-table"]
-  difficulty_table["new-game-plus-recipe-difficulty-drop-down"].selected_index  = 1
-  difficulty_table["new-game-plus-technology-difficulty-drop-down"].selected_index = 1
   difficulty_table["new-game-plus-technology-multiplier-textfield"].text = "1"
   -- MAP SETTINGS --
   map_settings_gui.expansion_reset_to_defaults(more_config_table)
@@ -115,8 +114,6 @@ function use_current_map_gen(player, map_gen_settings, difficulty_settings, map_
   -- DIFFICULTY SETTINGS --
   local more_config_table = frame_flow["new-game-plus-config-more-frame"]["new-game-plus-config-more-frame"]["new-game-plus-config-more-table"]
   local difficulty_table = more_config_table["new-game-plus-config-more-difficulty-flow"]["new-game-plus-config-more-difficulty-table"]
-  difficulty_table["new-game-plus-recipe-difficulty-drop-down"].selected_index  = difficulty_settings.recipe_difficulty + 1
-  difficulty_table["new-game-plus-technology-difficulty-drop-down"].selected_index = difficulty_settings.technology_difficulty + 1
   difficulty_table["new-game-plus-technology-multiplier-textfield"].text = tostring(difficulty_settings.technology_price_multiplier)
   -- MAP SETTINGS --
   map_settings_gui.expansion_set_to_current(more_config_table, map_settings)
@@ -127,7 +124,7 @@ end
 -- Import map exchange string
 local function import_mes(player)
   local textbox = player.gui.center["new-game-plus-import-frame"]["new-game-plus-import-text-box"]
-  local status, settings = pcall(game.parse_map_exchange_string, textbox.text)
+  local status, settings = pcall(helpers.parse_map_exchange_string, textbox.text)
   gui.kill_mes_import_window(player)
   if not status then
     player.print({"gui-map-generator.error-importing-exchange-string"})
@@ -150,8 +147,6 @@ local function change_map_settings(player)
   --Difficulty
   local difficulty_settings = game.difficulty_settings
   local difficulty_table = more_config_table["new-game-plus-config-more-difficulty-flow"]["new-game-plus-config-more-difficulty-table"]
-  difficulty_settings.recipe_difficulty = difficulty_table["new-game-plus-recipe-difficulty-drop-down"].selected_index - 1
-  difficulty_settings.technology_difficulty = difficulty_table["new-game-plus-technology-difficulty-drop-down"].selected_index - 1
   local technology_price_multiplier = util.textfield_to_uint(difficulty_table["new-game-plus-technology-multiplier-textfield"])
   if technology_price_multiplier and (technology_price_multiplier > 0) and (technology_price_multiplier <= 1000) then
     difficulty_settings.technology_price_multiplier = technology_price_multiplier
@@ -287,7 +282,7 @@ local function generate_new_world(player)
     for _, force in pairs(game.forces) do
       for _, tech in pairs(force.technologies) do
         tech.researched = false;
-        force.set_saved_technology_progress(tech, 0)
+        tech.saved_progress = 0
       end
       script.raise_event(on_technology_reset_event, {force = force})
     end
@@ -306,8 +301,8 @@ local function generate_new_world(player)
       game.delete_surface(surface)
     end
   end
-  global.world_generated = true
-  global.rocket_launched = false  --we act like no rocket has been launched, so that we can do the whole "launch a satellite and make gui" thing again
+  storage.world_generated = true
+  storage.rocket_launched = false  --we act like no rocket has been launched, so that we can do the whole "launch a satellite and make gui" thing again
   debug_log("New game plus has been generated, raising event")
   script.raise_event(on_post_new_game_plus_event, {tech_reset = tech_reset})
 end
@@ -357,39 +352,42 @@ local function make_grass_bridge(from, to, surface) --makes a two tile wide nort
 end
 
 script.on_event(defines.events.on_chunk_generated, function(event) --prevent island spawns (hopefully)
-  if not global.world_generated then return end
+  if not storage.world_generated then return end
   local surface = event.surface
   if surface.index == 1 then
     local chunk_area = event.area
     if chunk_area.left_top.x == 0 and chunk_area.left_top.y == 0 and chunk_area.right_bottom.x == 32 and chunk_area.right_bottom.y == 32 then
       debug_log("Making grass bridge in chunk...") -- island spawns are so rare now that I only make a bridge in the first chunk
       make_grass_bridge(0, 32, surface)
-      global.world_generated = false
+      storage.world_generated = false
     end
   end
 end)
 
-script.on_configuration_changed(function() --regen gui in case a mod added/removed resources, only if a rocket has been launched; also runs if startup settings change
-  if global.rocket_launched then
+script.on_configuration_changed(function()
+  legacy_import.adopt("NewGamePlus")
+  --regen gui in case a mod added/removed resources, only if a rocket has been launched; also runs if startup settings change
+  if storage.rocket_launched then
     for _, player in pairs(game.players) do
       full_gui_regen(player)
     end
   end
-  global.use_rso = nil -- migration from pre 3.0.1
-  global.tech_reset = nil -- migration from pre 3.1.2
-  if not global.world_generated then
-    global.world_generated = global.next_nauvis_number and global.next_nauvis_number ~= 1 or false -- migration from pre 3.1.0
+  storage.use_rso = nil -- migration from pre 3.0.1
+  storage.tech_reset = nil -- migration from pre 3.1.2
+  if not storage.world_generated then
+    storage.world_generated = storage.next_nauvis_number and storage.next_nauvis_number ~= 1 or false -- migration from pre 3.1.0
   end
 end)
 
 script.on_event(defines.events.on_player_created, function(event) --create gui for joining player, only if a rocket has been launched
-  if global.rocket_launched then
+  if storage.rocket_launched then
     full_gui_regen(game.get_player(event.player_index))
   end
 end)
 
 script.on_init(function()
-  global.world_generated = false
+  if legacy_import.adopt("NewGamePlus") then return end
+  storage.world_generated = false
 end)
 
 commands.add_command("ngp-gui", {"msg.new-game-plus-gui-command-help"}, function(event)
@@ -398,7 +396,7 @@ commands.add_command("ngp-gui", {"msg.new-game-plus-gui-command-help"}, function
       for _, player in pairs(game.players) do
         full_gui_regen(player)
       end
-      global.rocket_launched = true --the rocket has now been launched, so the gui has to be regened on player created and config changed
+      storage.rocket_launched = true --the rocket has now been launched, so the gui has to be regened on player created and config changed
     else
       game.get_player(event.player_index).print({"msg.new-game-plus-gui-command-disabled"})
     end

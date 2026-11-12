@@ -1,4 +1,4 @@
-local util = require("__NewGamePlus__/utilities")
+local util = require("__newgameplus-updated__/utilities")
 local MOD_PREFIX = "new-game-plus-"
 local GUI_PREFIX = "map-settings-"
 local ENTIRE_PREFIX = MOD_PREFIX .. GUI_PREFIX
